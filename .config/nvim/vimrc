@@ -1,10 +1,9 @@
-"
 "nvim only setting
 if has('nvim')
     let g:python2_host_prog = "/usr/bin/python2"
     if has('mac')
         let g:python3_host_prog = "/usr/local/bin/python3"
-    elseif
+    elseif has('unix')
         let g:python3_host_prog = "/usr/bin/python3"
     endif
     let g:python_host_skip_check = 1
@@ -15,7 +14,7 @@ if has('nvim')
     "Restore cursor to file position in previous editing session
     set viminfo='10,\"100,:20,%,n~/.nviminfo
     au BufReadPost * if line("'\"") > 0|if line("'\"") <= line("$")|exe("norm '\"")|else|exe "norm $"|endif|endif
-elseif
+else
     "Restore cursor to file position in previous editing session
     set viminfo='10,\"100,:20,%,n~/.viminfo
     au BufReadPost * if line("'\"") > 0|if line("'\"") <= line("$")|exe("norm '\"")|else|exe "norm $"|endif|endif
