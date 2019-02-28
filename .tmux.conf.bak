@@ -1,0 +1,166 @@
+#
+
+# -- general -------------------------------------------------------------------
+
+set -g default-terminal "screen-256color" # colors!
+setw -g xterm-keys on
+set -s escape-time 10                     # faster command sequences
+set -sg repeat-time 600                   # increase repeat timeout
+set -s focus-events on
+
+set -g prefix2 C-a                        # GNU-Screen compatible prefix
+bind C-a send-prefix -2
+
+set -q -g status-utf8 on                  # expect UTF-8 (tmux < 2.2)
+setw -q -g utf8 on
+
+set -g history-limit 5000                 # boost history
+
+# No bells at all
+set -g bell-action none
+
+# Lock after 15 minutes
+set -g lock-after-time 1800
+
+# Keep windows around after they exit
+set -g remain-on-exit off
+
+# edit configuration
+bind e new-window -n '~/.tmux.conf.local' "sh -c '\${EDITOR:-vim} ~/.tmux.conf.local && tmux source ~/.tmux.conf && tmux display \"~/.tmux.conf sourced\"'"
+
+# reload configuration
+bind r source-file ~/.tmux.conf \; display '~/.tmux.conf sourced'
+
+# -- general end -------------------------------------------------------------------
+
+# -- display -------------------------------------------------------------------
+
+set -g base-index 1           # start windows numbering at 1
+setw -g pane-base-index 1     # make pane numbering consistent with windows
+
+setw -g automatic-rename on   # rename window to reflect current program
+set -g renumber-windows on    # renumber windows when a window is closed
+
+set -g set-titles on          # set terminal title
+
+set -g display-panes-time 800 # slightly longer pane indicators display time
+set -g display-time 1000      # slightly longer status messages display time
+
+set -g status-interval 10     # redraw status line every 10 seconds
+
+# clear both screen and history
+# bind -n C-l send-keys C-l \; run 'sleep 0.1' \; clear-history
+
+# activity
+set -g monitor-activity on
+set -g visual-activity off
+
+# panes
+set -g pane-border-bg colour234
+set -g pane-border-fg colour234
+set -g pane-active-border-bg colour118
+set -g pane-active-border-fg colour118
+
+# Some tweaks to the status line
+set -g status-bg green
+set -g status-right "%H:%M Continuum status: #{continuum_status}"
+set -g window-status-current-attr "underscore"
+
+
+# -- display end -------------------------------------------------------------------
+
+# Turn the mouse on, but without copy mode dragging
+set -g mouse on
+#unbind -n MouseDrag1Pane
+#unbind -temacs-copy MouseDrag1Pane
+
+
+# Keys to toggle monitoring activity in a window, and synchronize-panes
+bind m set monitor-activity
+bind y set synchronize-panes\; display 'synchronize-panes #{?synchronize-panes,on,off}'
+
+# Keys to hide and show a window name from the status line
+bind '-' set window-status-format '#I'\; set window-status-current-format '#I'
+bind '+' set window-status-format '#I:#W#F'\; set window-status-current-format '#I:#W#F'
+
+
+# -- Vim navigation and clipboard shared -------------------------------------------------------------------
+
+# Smart pane switching with awareness of Vim splits.
+# See: https://github.com/christoomey/vim-tmux-navigator
+is_vim="ps -o state= -o comm= -t '#{pane_tty}' \
+    | grep -iqE '^[^TXZ ]+ +(\\S+\\/)?g?(view|n?vim?x?|fzf?)(diff)?$'"
+    #is_vim='`echo "#{pane_current_command}" | grep -iqE "(^|\/)g?(view|n?vim?x?)(diff)?$"` || `echo "#T" | grep -iqE "(^|\/)fzf$"`'
+bind-key -n C-h if-shell "$is_vim" "send-keys C-h"  "select-pane -L"
+bind-key -n C-j if-shell "$is_vim" "send-keys C-J"  "select-pane -D"
+bind-key -n C-k if-shell "$is_vim" "send-keys C-K"  "select-pane -U"
+bind-key -n C-l if-shell "$is_vim" "send-keys C-l"  "select-pane -R"
+bind-key -n C-\ if-shell "$is_vim" "send-keys C-\\" "select-pane -l"
+
+# Shift arrow to switch windows
+bind -n S-Left  previous-window
+bind -n S-Right next-window
+
+#swap window
+bind-key S-Left swap-window -t -1
+bind-key S-Right swap-window -t +1
+#prefix + z maximize current panel and hide others panel
+
+
+run-shell "powerline-daemon -q"
+source ~/Library/Python/3.7/lib/python/site-packages/powerline/bindings/tmux/powerline.conf
+
+#status bar top
+set-option -g status-position top
+#resurrect
+set -g @resurrect-strategy-vim 'session'
+
+
+# Change the prefix key to C-a
+set -g prefix M-o
+unbind C-b
+bind M-o send-prefix
+
+#
+# I'm a Vim user, this makes navigation easier
+setw -g mode-keys vi # I especially like being able to search with /,? when in copy-mode
+set -g status-keys vi
+bind-key Escape copy-mode
+
+# Vim style copy for linux
+# bind-key -t vi-copy v begin-selection
+# bind-key -t vi-copy y copy-pipe "xsel -i -p && xsel -o -p | xsel -i -b"
+# bind-key p run "xsel -o | tmux load-buffer - ; tmux paste-buffer "
+
+# copy setting --------------------------------
+setw -g mode-keys vi
+# buffer缓存复制到Mac系统粘贴板
+bind-key C-c run "tmux save-buffer - | reattach-to-user-namespace pbcopy"
+# Mac系统粘贴板内容复制到会话
+bind-key C-v run "reattach-to-user-namespace pbpaste | tmux load-buffer - \; paste-buffer -d"
+# 绑定y键为复制选中文本到Mac系统粘贴板
+bind-key -T copy-mode-vi 'y' send-keys -X copy-pipe-and-cancel 'reattach-to-user-namespace pbcopy'
+# 鼠标拖动选中文本，并复制到Mac系统粘贴板
+bind-key -T copy-mode-vi MouseDragEnd1Pane send -X copy-pipe-and-cancel "pbcopy"
+# vi-mode copy
+bind-key -T copy-mode-vi 'p' run "reattach-to-user-namespace pbpaste | tmux load-buffer - \; paste-buffer -d"
+
+
+# split window
+unbind '"'
+# vertical split (prefix -)
+bind - splitw -v
+unbind %
+bind | splitw -h # horizontal split (prefix |)
+
+#plugins
+set -g @plugin 'tmux-plugins/tpm'  #插件管理器
+set -g @plugin 'tmux-plugins/tmux-sensible'  #常用的高级设置
+set -g @plugin 'tmux-plugins/tmux-resurrect' #session持久化
+set -g @plugin 'tmux-plugins/tmux-pain-control' #vim模式的快捷键
+set -g @plugin 'tmux-plugins/tmux-prefix-highlight' #高亮按下前缀键
+set -g @plugin 'christoomey/vim-tmux-navigator'
+set -g @plugin 'tmux-plugins/tmux-continuum'
+
+# Initialize TMUX plugin manager (keep this line at the very bottom of tmux.conf)
+run '~/.tmux/plugins/tpm/tpm'
