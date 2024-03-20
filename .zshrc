@@ -115,7 +115,7 @@ bindkey -r ''
 export PATH=$PATH:~/.fzf/bin/
 source "$HOME/.fzf/shell/key-bindings.zsh"
 export FZF_DEFAULT_COMMAND='ag -g ""'
-export FZF_DEFAULT_OPTS='--bind ctrl-j:down,ctrl-k:up,ctrl-d:page-down,ctrl-u:page-up,ctrl-w:forward-word,ctrl-b:backward-word,ctrl-d:kill-line,ctrl-l:beginning-of-line,ctrl-e:end-of-line,ctrl-y:yank,ctrl-a:select-all'
+export FZF_DEFAULT_OPTS='--bind ctrl-j:down,ctrl-k:up,ctrl-d:page-down,ctrl-u:page-up,ctrl-w:forward-word,ctrl-b:backward-word,ctrl-l:beginning-of-line,ctrl-e:end-of-line,ctrl-y:yank,ctrl-a:select-all,ctrl-s:kill-line'
 
 
 [ -f ~/.fzf.zsh ] && source ~/.fzf.zsh
@@ -130,8 +130,18 @@ alias ctags="`brew --prefix`/bin/ctags"
 bindkey '^ ' autosuggest-accept
 
 export PATH="$HOME/.yarn/bin:$HOME/.config/yarn/global/node_modules/.bin:$PATH"
+export PATH="$PATH:/usr/local/opt/llvm/bin"
+export PATH="$PATH:/usr/local/opt/gettext/bin"
+export PATH="$PATH:$HOME/.cargo/bin"
+export PATH="$PATH:$HOME/.local/bin"
 
 #C-hjkl map for tmux movement not for zsh, so map to C-b C-f
 bindkey '^b' backward-char
 bindkey '^f' forward-char
+#^[ is meta key for macos
+bindkey '[C' forward-word
+bindkey '[D' backward-word
 
+export NVM_DIR="$HOME/.nvm"
+[ -s "$NVM_DIR/nvm.sh" ] && . "$NVM_DIR/nvm.sh"  # This loads nvm
+[ -s "$NVM_DIR/bash_completion" ] && . "$NVM_DIR/bash_completion"  # This loads nvm bash_completion
