@@ -50,18 +50,33 @@ zsh -n .zshrc          # 語法檢查，改完必跑
 zsh -i -c exit         # 起一個 interactive shell 確認沒有 error 噴出來
 ```
 
-## 現況（2026-08-19）需要注意
+## 現況（2026-08-19）
 
-1. **`~/.zshrc` 和 `~/.tmux.conf` 目前是普通檔案，不是 symlink**。`bootstrap.sh` 的連結沒生效
-   （或曾生效後被 oh-my-zsh 安裝程式覆寫）。也就是說**這個 repo 裡的 `.zshrc` 不是實際在跑的那份**。
-   要動設定前先確認你改的是哪一份，收斂回 symlink 之後才能只維護一處。
-2. **`.zshrc` 是舊的**（147 行，2025-04 那次 commit），實際在用的 `~/.zshrc` 已經多了 nvm、conda、
-   homebrew、ffmpeg、cargo 等區塊。下次更新要以實際跑的那份為準，不要直接 pull 覆蓋。
-3. `bootstrap.sh` 有兩個問題，動到它時順手修：
-   - `files=()` 裡列了 `.vimrc` 和 `.config/nvim`，但 repo 裡沒有這兩個 → 會建出斷掉的 symlink
-   - `install_ohmyzsh()` 最後一行 `cp zshrc ~/.zshrc` 檔名少了點（repo 裡是 `.zshrc`），
-     而且會蓋掉前面 symlink 迴圈剛建好的連結
-4. `.bashrc` 也在 repo 裡但不在 `bootstrap.sh` 的 `files=()` 清單內，不會被 symlink。
+macOS 端已經收斂完成：
+
+- `~/.zshrc` 是 symlink → `~/dotfiles/.zshrc`，改設定就直接改 repo 這份
+- 合併前實際在跑的那份備份在 `~/dotfiles.orig/.zshrc.pre-merge-20260819`
+- 金鑰已抽到 `~/.zshrc.local`（`600`）：`GOOGLE_API_KEY`、`OPENAI_API_KEY`、
+  `FINNHUB_API_KEY`、`CLAUDE_CODE_OAUTH_TOKEN`
+
+**還沒做的事：**
+
+1. **Ubuntu 24.04 那台還沒套用**這份合併版。過去那台是獨立維護一份 `.zshrc`，
+   套用時要一併建 `~/.zshrc.local`，否則該機需要的環境變數會消失。
+2. `CLAUDE_CODE_OAUTH_TOKEN` 等 key 曾經以明文存在非版控的 `~/.zshrc` 裡一段時間，
+   雖然沒進過 git，仍建議找時間輪替一次。
+3. commit 尚未 push（remote 是 public，push 前再確認一次沒帶到機密）。
+
+## 已知的 bootstrap.sh 問題
+
+動到它時順手修：
+
+- `files=()` 裡列了 `.vimrc` 和 `.config/nvim`，但 repo 裡沒有這兩個 → 會建出斷掉的 symlink。
+  實際上 `~/.vimrc` → `~/.config/nvim/vimrc`、`~/.config/nvim` → `nvim_pikajian`，都不是指向這個 repo
+- `install_ohmyzsh()` 最後一行 `cp zshrc ~/.zshrc` 檔名少了點（repo 裡是 `.zshrc`），
+  而且會蓋掉前面 symlink 迴圈剛建好的連結 —— `~/.zshrc` 之前不是 symlink 很可能就是這行造成的
+- `.bashrc`、`.inputrc` 在 repo 裡但不在 `files=()` 清單內，不會被 symlink
+- `~/.tmux.conf` 目前也還是普通檔案，不是 symlink
 
 ## 慣例
 
